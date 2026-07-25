@@ -7,44 +7,42 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - name: 1. Nettoyage absolu (Destruction des erreurs)
+      - name: 1. Nettoyage et préparation
         script: |
-          echo "Suppression totale des anciens fichiers et caches..."
+          echo "Suppression totale du dossier iOS pour éviter toute corruption..."
           rm -rf ios pubspec.lock
           flutter clean
           
-      - name: 2. Recréation du projet iOS
+      - name: 2. Recréation d'un projet iOS propre
         script: |
-          echo "Création d'un projet iOS pur, vierge et sans corruption..."
+          echo "Création d'un environnement iOS natif flambant neuf..."
           flutter create . --platforms ios
           
-      - name: 3. Télécharger les dépendances
+      - name: 3. Installation des dépendances
         script: |
           flutter pub get
           
-      - name: 4. Génération de l'icône sécurisée
+      - name: 4. Application de l'icône du jeu (icon.png)
         script: |
-          echo "Vérification de l'image icon.png..."
-          # On cherche désormais le bon fichier : icon.png
           if [ -f "assets/icon.png" ]; then
-            echo "✅ Image trouvée, génération des icônes iOS..."
+            echo "✅ Image icon.png trouvée, injection dans Xcode..."
             dart run flutter_launcher_icons
           else
-            echo "⚠️ AVERTISSEMENT : 'assets/icon.png' introuvable."
-            echo "Assure-toi de l'avoir uploadé dans le dossier 'assets' sur Github !"
+            echo "⚠️ assets/icon.png introuvable. On garde l'icône par défaut."
           fi
           
-      - name: 5. Compilation iOS (Sans signature)
+      - name: 5. Compilation rapide (Sans signature)
         script: |
-          echo "Désactivation manuelle de la signature dans Xcode..."
+          echo "Désactivation des sécurités Apple dans Xcode..."
           sed -i '' 's/DevelopmentTeam = .*/DevelopmentTeam = "";/g' ios/Runner.xcodeproj/project.pbxproj || true
           
-          echo "Lancement de la compilation..."
+          echo "Démarrage de la compilation ultra-rapide..."
+          # L'option -v permet de voir exactement ce qu'il se passe si ça bloque
           flutter build ios --release --no-codesign -v
           
-      - name: 6. Création du fichier .ipa pour Sideloadly
+      - name: 6. Création de l'archive (.ipa)
         script: |
-          echo "Préparation de l'IPA..."
+          echo "Mise en paquet pour Sideloadly..."
           mkdir -p build/ios/ipa/Payload
           
           if [ -d "build/ios/iphoneos/Runner.app" ]; then
@@ -53,19 +51,18 @@ workflows:
             cp -R build/ios/Release-iphoneos/Runner.app build/ios/ipa/Payload/
           fi
           
-          echo "Compression en .ipa..."
           cd build/ios/ipa
           zip -r -q idle_nightclub.ipa Payload
           rm -rf Payload
           
-          echo "🎉 SUCCÈS : Fichier idle_nightclub.ipa généré pour Sideloadly !"
+          echo "🎉 Fichier idle_nightclub.ipa prêt !"
           
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
-          - test@example.com # Remplace bien par ton e-mail
+          - test@example.com # Pense à mettre ton mail ici
         notify:
           success: true
           failure: true
