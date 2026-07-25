@@ -9,23 +9,23 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Uniquement les icônes de base d'iOS, aucune dépendance lourde !
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  # Utilisé uniquement pour générer l'icône, n'alourdit pas l'application finale
   flutter_launcher_icons: any
 
 flutter:
   uses-material-design: true
   assets:
-    # Le vrai nom de ton image !
     - assets/icon.png
 
 flutter_launcher_icons:
   ios: true
-  # Le chemin exact pointant vers la bonne image
   image_path: "assets/icon.png"
   remove_alpha_ios: true
 
