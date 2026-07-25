@@ -25,7 +25,6 @@ class IdleNightclubApp extends StatelessWidget {
 }
 
 // --- MODÈLES DE DONNÉES ---
-
 enum ClientState { walkingToClub, atBar, dancing, walkingOut }
 
 class Client {
@@ -47,12 +46,10 @@ class Car {
   double price;
   IconData icon;
   Offset parkingSpot;
-
   Car(this.name, this.color, this.price, this.icon, this.parkingSpot);
 }
 
 // --- ÉCRAN PRINCIPAL DU JEU ---
-
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -71,7 +68,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   double _money = 500.0;
   int _drinksStock = 20;
-  
   int _clubCapacity = 5;
   int _barLevel = 1;
   int _dancefloorLevel = 1;
@@ -89,9 +85,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   final Rect _dancefloorBounds = const Rect.fromLTWH(200, 200, 300, 300);
   final Rect _doorPosition = const Rect.fromLTWH(-20, 250, 40, 100);
 
-  late final List<Car> _carCatalog = [
-    Car("Berline de Luxe", Colors.grey, 2000, Icons.directions_car, const Offset(-100, 100)),
-    Car("Voiture de Sport", Colors.red, 5000, Icons.sports_motorsports, const Offset(-100, 250)),
+  final List<Car> _carCatalog = [
+    Car("Berline", Colors.grey, 2000, Icons.directions_car, const Offset(-100, 100)),
+    Car("Sport", Colors.red, 5000, Icons.sports_motorsports, const Offset(-100, 250)),
     Car("Limousine", Colors.white, 15000, Icons.airport_shuttle, const Offset(-100, 400)),
     Car("Supercar", Colors.yellowAccent, 50000, Icons.electric_car, const Offset(-250, 250)),
   ];
@@ -105,9 +101,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     
     Timer.periodic(const Duration(seconds: 2), (timer) {
       if (!mounted) return;
-      if (_clients.length < _clubCapacity) {
-        _spawnClient();
-      }
+      if (_clients.length < _clubCapacity) _spawnClient();
     });
   }
 
@@ -134,12 +128,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
       for (int i = _clients.length - 1; i >= 0; i--) {
         Client c = _clients[i];
-        
         if (c.waitTime > 0) {
           c.waitTime -= dt;
-          if (c.waitTime <= 0) {
-            _advanceClientState(c);
-          }
+          if (c.waitTime <= 0) _advanceClientState(c);
           continue;
         }
 
@@ -152,15 +143,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           _handleClientArrival(c);
         }
       }
-      
       _clients.removeWhere((c) => c.state == ClientState.walkingOut && (c.position - c.target).distance <= 5.0);
     });
   }
 
   void _spawnClient() {
-    final spawnPos = Offset(_parkingBounds.left + 50, 300 + _random.nextDouble() * 100 - 50);
     Client newClient = Client(
-      position: spawnPos,
+      position: Offset(_parkingBounds.left + 50, 300 + _random.nextDouble() * 100 - 50),
       color: Colors.primaries[_random.nextInt(Colors.primaries.length)],
     );
     newClient.target = Offset(_doorPosition.center.dx, _doorPosition.center.dy);
@@ -171,12 +160,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     if (c.state == ClientState.walkingToClub) {
       if (_random.nextBool() && _drinksStock > 0) {
         c.state = ClientState.atBar;
-        c.target = Offset(_barBounds.left + _random.nextDouble() * _barBounds.width,
-                          _barBounds.top + _random.nextDouble() * _barBounds.height);
+        c.target = Offset(_barBounds.left + _random.nextDouble() * _barBounds.width, _barBounds.top + _random.nextDouble() * _barBounds.height);
       } else {
         c.state = ClientState.dancing;
-        c.target = Offset(_dancefloorBounds.left + _random.nextDouble() * _dancefloorBounds.width,
-                          _dancefloorBounds.top + _random.nextDouble() * _dancefloorBounds.height);
+        c.target = Offset(_dancefloorBounds.left + _random.nextDouble() * _dancefloorBounds.width, _dancefloorBounds.top + _random.nextDouble() * _dancefloorBounds.height);
       }
     } else if (c.state == ClientState.atBar) {
       if (_drinksStock > 0) {
@@ -197,8 +184,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     if (c.state == ClientState.atBar) {
       if (_random.nextBool()) {
         c.state = ClientState.dancing;
-        c.target = Offset(_dancefloorBounds.left + _random.nextDouble() * _dancefloorBounds.width,
-                          _dancefloorBounds.top + _random.nextDouble() * _dancefloorBounds.height);
+        c.target = Offset(_dancefloorBounds.left + _random.nextDouble() * _dancefloorBounds.width, _dancefloorBounds.top + _random.nextDouble() * _dancefloorBounds.height);
       } else {
         c.state = ClientState.walkingOut;
         c.target = Offset(_parkingBounds.left, 300);
@@ -224,9 +210,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                   const TabBar(
                     indicatorColor: Colors.purpleAccent,
                     tabs: [
-                      Tab(icon: Icon(Icons.upgrade), text: "Améliorer"),
-                      Tab(icon: Icon(Icons.local_shipping), text: "Stocks"),
-                      Tab(icon: Icon(Icons.directions_car), text: "Concession"),
+                      Tab(icon: Icon(Icons.upgrade), text: "Club"),
+                      Tab(icon: Icon(Icons.local_shipping), text: "Stock"),
+                      Tab(icon: Icon(Icons.directions_car), text: "Autos"),
                     ],
                   ),
                   Expanded(
@@ -235,27 +221,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                         ListView(
                           padding: const EdgeInsets.all(16),
                           children: [
-                            _buildUpgradeTile(
-                              "Agrandir la boîte", "Capacité max +5", 
-                              500.0 * (_clubCapacity / 5), 
-                              () => setState(() { _clubCapacity += 5; setModalState((){}); })
-                            ),
-                            _buildUpgradeTile(
-                              "Améliorer le Bar", "Boissons + chères", 
-                              300.0 * _barLevel, 
-                              () => setState(() { _barLevel++; setModalState((){}); })
-                            ),
-                            _buildUpgradeTile(
-                              "Sono & Lumières", "Gains piste +", 
-                              400.0 * _dancefloorLevel, 
-                              () => setState(() { _dancefloorLevel++; setModalState((){}); })
-                            ),
-                            if (!_hasVIP)
-                              _buildUpgradeTile(
-                                "Espace VIP", "Débloque la zone VIP", 
-                                5000.0, 
-                                () => setState(() { _hasVIP = true; setModalState((){}); })
-                              ),
+                            _buildUpgradeTile("Agrandir", "+5 Places", 500.0 * (_clubCapacity / 5), () => setState(() { _clubCapacity += 5; setModalState((){}); })),
+                            _buildUpgradeTile("Bar", "Prix +", 300.0 * _barLevel, () => setState(() { _barLevel++; setModalState((){}); })),
+                            _buildUpgradeTile("Sono", "Gains +", 400.0 * _dancefloorLevel, () => setState(() { _dancefloorLevel++; setModalState((){}); })),
+                            if (!_hasVIP) _buildUpgradeTile("VIP", "Zone", 5000.0, () => setState(() { _hasVIP = true; setModalState((){}); })),
                           ],
                         ),
                         ListView(
@@ -266,12 +235,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                               trailing: Text("$_drinksStock btls", style: const TextStyle(color: Colors.purpleAccent, fontSize: 18, fontWeight: FontWeight.bold)),
                             ),
                             const Divider(),
-                            _buildUpgradeTile("Commander 50 Bouteilles", "Livraison immédiate", 100.0, 
-                              () => setState(() { _drinksStock += 50; setModalState((){}); })
-                            ),
-                            _buildUpgradeTile("Commander 200 Bouteilles", "Livraison immédiate", 350.0, 
-                              () => setState(() { _drinksStock += 200; setModalState((){}); })
-                            ),
+                            _buildUpgradeTile("50 Bouteilles", "Livraison", 100.0, () => setState(() { _drinksStock += 50; setModalState((){}); })),
+                            _buildUpgradeTile("200 Bouteilles", "Livraison", 350.0, () => setState(() { _drinksStock += 200; setModalState((){}); })),
                           ],
                         ),
                         ListView(
@@ -281,17 +246,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                             return ListTile(
                               leading: Icon(car.icon, color: car.color, size: 40),
                               title: Text(car.name, style: const TextStyle(color: Colors.white)),
-                              subtitle: Text(isOwned ? "Possédée" : "${car.price.toStringAsFixed(0)} \$", style: TextStyle(color: isOwned ? Colors.green : Colors.grey)),
-                              trailing: isOwned ? null : ElevatedButton(
+                              trailing: isOwned ? const Text("Acquis", style: TextStyle(color: Colors.green)) : ElevatedButton(
                                 style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
                                 onPressed: _money >= car.price ? () {
-                                  setState(() {
-                                    _money -= car.price;
-                                    _ownedCars.add(car);
-                                    setModalState((){});
-                                  });
+                                  setState(() { _money -= car.price; _ownedCars.add(car); setModalState((){}); });
                                 } : null,
-                                child: const Text("Acheter"),
+                                child: Text("${car.price.toStringAsFixed(0)} \$"),
                               ),
                             );
                           }).toList(),
@@ -314,15 +274,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       title: Text(title, style: const TextStyle(color: Colors.white)),
       subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey)),
       trailing: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canAfford ? Colors.green : Colors.grey[700],
-        ),
-        onPressed: canAfford ? () {
-          setState(() {
-            _money -= cost;
-          });
-          onBuy();
-        } : null,
+        style: ElevatedButton.styleFrom(backgroundColor: canAfford ? Colors.green : Colors.grey[700]),
+        onPressed: canAfford ? () { setState(() { _money -= cost; }); onBuy(); } : null,
         child: Text("${cost.toStringAsFixed(0)} \$"),
       ),
     );
@@ -339,20 +292,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text("Haut", style: TextStyle(color: Colors.white)),
-              Wrap(
-                children: Colors.primaries.map((c) => GestureDetector(
-                  onTap: () { setState(() { _playerShirtColor = c; }); Navigator.pop(context); },
-                  child: Container(margin: const EdgeInsets.all(4), width: 30, height: 30, color: c),
-                )).toList(),
-              ),
+              Wrap(children: Colors.primaries.map((c) => GestureDetector(
+                onTap: () { setState(() { _playerShirtColor = c; }); Navigator.pop(context); },
+                child: Container(margin: const EdgeInsets.all(4), width: 30, height: 30, color: c),
+              )).toList()),
               const SizedBox(height: 20),
               const Text("Bas", style: TextStyle(color: Colors.white)),
-              Wrap(
-                children: Colors.primaries.map((c) => GestureDetector(
-                  onTap: () { setState(() { _playerPantsColor = c; }); Navigator.pop(context); },
-                  child: Container(margin: const EdgeInsets.all(4), width: 30, height: 30, color: c),
-                )).toList(),
-              ),
+              Wrap(children: Colors.primaries.map((c) => GestureDetector(
+                onTap: () { setState(() { _playerPantsColor = c; }); Navigator.pop(context); },
+                child: Container(margin: const EdgeInsets.all(4), width: 30, height: 30, color: c),
+              )).toList()),
             ],
           ),
         );
@@ -364,12 +313,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final centerOffset = Offset(screenSize.width / 2, screenSize.height / 2);
-    
-    final cameraTransform = Matrix4.translationValues(
-      centerOffset.dx - _playerPosition.dx,
-      centerOffset.dy - _playerPosition.dy,
-      0.0,
-    );
+    final cameraTransform = Matrix4.translationValues(centerOffset.dx - _playerPosition.dx, centerOffset.dy - _playerPosition.dy, 0.0);
 
     return Scaffold(
       body: Stack(
@@ -382,27 +326,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 Positioned.fromRect(
                   rect: _parkingBounds,
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      border: Border.all(color: Colors.white24, width: 2),
-                    ),
-                    child: const Align(
-                      alignment: Alignment.topCenter,
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text("PARKING", style: TextStyle(color: Colors.white54, fontSize: 24, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
+                    decoration: BoxDecoration(color: Colors.grey[800], border: Border.all(color: Colors.white24, width: 2)),
+                    child: const Align(alignment: Alignment.topCenter, child: Padding(padding: EdgeInsets.all(16.0), child: Text("PARKING", style: TextStyle(color: Colors.white54, fontSize: 24, fontWeight: FontWeight.bold)))),
                   ),
                 ),
                 Positioned.fromRect(
                   rect: _clubBounds,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      border: Border.all(color: Colors.deepPurple, width: 4),
-                    ),
-                  ),
+                  child: Container(decoration: BoxDecoration(color: Colors.grey[900], border: Border.all(color: Colors.deepPurple, width: 4))),
                 ),
                 Positioned.fromRect(
                   rect: _doorPosition,
@@ -411,21 +341,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 Positioned.fromRect(
                   rect: _dancefloorBounds,
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    decoration: BoxDecoration(color: Colors.purple.withOpacity(0.3), borderRadius: BorderRadius.circular(20)),
                     child: const Center(child: Text("DANCEFLOOR", style: TextStyle(color: Colors.white30, letterSpacing: 5))),
                   ),
                 ),
                 Positioned.fromRect(
                   rect: _barBounds,
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.brown[700],
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.amber, width: 2),
-                    ),
+                    decoration: BoxDecoration(color: Colors.brown[700], borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.amber, width: 2)),
                     child: const Center(child: Icon(Icons.local_bar, color: Colors.amber, size: 50)),
                   ),
                 ),
@@ -433,48 +356,28 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                   Positioned(
                     left: 20, top: 20, width: 150, height: 150,
                     child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
-                        border: Border.all(color: Colors.amber, width: 3),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
+                      decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), border: Border.all(color: Colors.amber, width: 3), borderRadius: BorderRadius.circular(15)),
                       child: const Center(child: Text("VIP", style: TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold))),
                     ),
                   ),
-                ..._ownedCars.map((car) => Positioned(
-                  left: car.parkingSpot.dx,
-                  top: car.parkingSpot.dy,
-                  child: Transform.rotate(
-                    angle: pi / 2,
-                    child: Icon(car.icon, color: car.color, size: 80),
-                  ),
-                )),
+                ..._ownedCars.map((car) => Positioned(left: car.parkingSpot.dx, top: car.parkingSpot.dy, child: Transform.rotate(angle: pi / 2, child: Icon(car.icon, color: car.color, size: 80)))),
                 ..._clients.map((c) => Positioned(
-                  left: c.position.dx - 15,
-                  top: c.position.dy - 15,
+                  left: c.position.dx - 15, top: c.position.dy - 15,
                   child: Column(
                     children: [
                       Icon(Icons.person, color: c.color, size: 30),
-                      if (c.state == ClientState.dancing)
-                        const Text("🎵", style: TextStyle(fontSize: 12)),
-                      if (c.state == ClientState.atBar)
-                        const Text("🍹", style: TextStyle(fontSize: 12)),
+                      if (c.state == ClientState.dancing) const Text("🎵", style: TextStyle(fontSize: 12)),
+                      if (c.state == ClientState.atBar) const Text("🍹", style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 )),
                 Positioned(
-                  left: _playerPosition.dx - 20,
-                  top: _playerPosition.dy - 20,
+                  left: _playerPosition.dx - 20, top: _playerPosition.dy - 20,
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: _playerShirtColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(color: _playerPantsColor, blurRadius: 10, spreadRadius: 2)
-                      ]
+                      color: _playerShirtColor, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [BoxShadow(color: _playerPantsColor, blurRadius: 10, spreadRadius: 2)]
                     ),
                     child: const Icon(Icons.face, color: Colors.black, size: 30),
                   ),
@@ -486,11 +389,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             top: 40, left: 20,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.purpleAccent),
-              ),
+              decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.purpleAccent)),
               child: Row(
                 children: [
                   const Icon(Icons.attach_money, color: Colors.green),
@@ -506,19 +405,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
             top: 40, right: 20,
             child: Column(
               children: [
-                FloatingActionButton(
-                  heroTag: "btn_manage",
-                  backgroundColor: Colors.deepPurple,
-                  onPressed: _openManagementMenu,
-                  child: const Icon(Icons.businessCenter, color: Colors.white),
-                ),
+                FloatingActionButton(heroTag: "btn_manage", backgroundColor: Colors.deepPurple, onPressed: _openManagementMenu, child: const Icon(Icons.businessCenter, color: Colors.white)),
                 const SizedBox(height: 10),
-                FloatingActionButton(
-                  heroTag: "btn_wardrobe",
-                  backgroundColor: Colors.pinkAccent,
-                  onPressed: _openWardrobe,
-                  child: const Icon(Icons.checkroom, color: Colors.white),
-                ),
+                FloatingActionButton(heroTag: "btn_wardrobe", backgroundColor: Colors.pinkAccent, onPressed: _openWardrobe, child: const Icon(Icons.checkroom, color: Colors.white)),
               ],
             ),
           ),
@@ -528,33 +417,17 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               onPanUpdate: (details) {
                 setState(() {
                   final delta = details.localPosition - const Offset(50, 50);
-                  if (delta.distance > 5) {
-                    _joystickDelta = delta / delta.distance;
-                  }
+                  if (delta.distance > 5) _joystickDelta = delta / delta.distance;
                 });
               },
-              onPanEnd: (details) {
-                setState(() {
-                  _joystickDelta = Offset.zero;
-                });
-              },
+              onPanEnd: (details) { setState(() { _joystickDelta = Offset.zero; }); },
               child: Container(
                 width: 100, height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white30, width: 2),
-                ),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle, border: Border.all(color: Colors.white30, width: 2)),
                 child: Center(
                   child: Transform.translate(
                     offset: _joystickDelta * 30,
-                    child: Container(
-                      width: 40, height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
+                    child: Container(width: 40, height: 40, decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), shape: BoxShape.circle)),
                   ),
                 ),
               ),
@@ -565,4 +438,5 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     );
   }
 }
+
 
