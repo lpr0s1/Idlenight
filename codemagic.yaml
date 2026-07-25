@@ -7,46 +7,59 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - name: 1. Initialiser l'arborescence iOS
+      - name: 1. Nettoyage absolu (Destruction des erreurs)
         script: |
-          echo "Génération des dossiers natifs iOS..."
-          if [ ! -d "ios" ]; then
-            flutter create . --project-name idle_nightclub --org com.studio.nightclub --platforms ios
-          else
-            echo "Dossier iOS déjà présent."
-          fi
-      - name: 2. Télécharger les dépendances
+          echo "Suppression totale des anciens fichiers et caches..."
+          rm -rf ios
+          rm -rf pubspec.lock
+          flutter clean
+          
+      - name: 2. Recréation du projet iOS
+        script: |
+          echo "Création d'un projet iOS pur, vierge et sans corruption..."
+          flutter create . --platforms ios
+          
+      - name: 3. Télécharger les dépendances
         script: |
           flutter pub get
-      - name: 3. Générer automatiquement l'icône de l'application
+          
+      - name: 4. Compilation iOS (Sans signature)
         script: |
-          if [ -f "assets/app_icon.png" ]; then
-            dart run flutter_launcher_icons
-          fi
-      - name: 4. Compiler la version iOS (Sans signature)
+          echo "Désactivation manuelle de la signature dans Xcode..."
+          # Sécurité supplémentaire : on efface toute trace d'équipe de développement dans le projet
+          sed -i '' 's/DevelopmentTeam = .*/DevelopmentTeam = "";/g' ios/Runner.xcodeproj/project.pbxproj || true
+          
+          echo "Lancement de la compilation..."
+          # Ajout du mode --verbose pour que, si par miracle ça plante, on ait l'erreur exacte et pas juste "Échec"
+          flutter build ios --release --no-codesign -v
+          
+      - name: 5. Création du fichier .ipa pour Sideloadly
         script: |
-          echo "Compilation en cours... (Mode sans signature Apple)"
-          flutter build ios --release --no-codesign
-      - name: 5. Créer le fichier .ipa
-        script: |
-          echo "Empaquetage du Payload..."
-          mkdir -p build/ios/ipa
-          # Gestion dynamique du dossier de sortie iOS selon la version de Flutter
-          if [ -d "build/ios/iphoneos" ]; then
-            cd build/ios/iphoneos
+          echo "Préparation de l'IPA..."
+          mkdir -p build/ios/ipa/Payload
+          
+          # On cherche l'application générée et on la copie
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
           else
-            cd build/ios/Release-iphoneos
+            cp -R build/ios/Release-iphoneos/Runner.app build/ios/ipa/Payload/
           fi
-          mkdir -p Payload
-          mv Runner.app Payload/
-          zip -r -q ../ipa/idle_nightclub.ipa Payload
+          
+          echo "Compression en .ipa..."
+          cd build/ios/ipa
+          zip -r -q idle_nightclub.ipa Payload
+          rm -rf Payload
+          
+          echo "🎉 SUCCÈS : Fichier idle_nightclub.ipa généré pour Sideloadly !"
+          
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
-          - test@example.com # Codemagic remplacera par votre email de compte
+          - test@example.com # Pense à mettre ton mail
         notify:
           success: true
           failure: true
+
 
